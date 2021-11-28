@@ -10,6 +10,8 @@ INPUT_FILENAME = './input/All.rtf'
 VIEW_FILENAME = './views/All.fmf'
 
 ATTRIBUTES = ['Ada', 'Att', 'Def', 'Det', 'Fit', 'GkD', 'GkH', 'GkS', 'Judge A', 'Jud PD', 'Judge P', 'Jud SA', 'Jud TD', 'Dis', 'Man', 'Men', 'Mot', 'Negotiating', 'Phy', 'Prs D', 'SpS', 'TCo', 'Tac Knw', 'Tec', 'Youth']
+COACHING_ATTRIBUTES = ['Att', 'Def', 'Men', 'Tec', 'TCo', 'Det', 'Dis', 'Mot']
+COACHING_APTITUDES = ['Att-Tec', 'Att-TCo', 'Def-Tec', 'Def-TCo', 'Men-Tec', 'Men-TCo']
 
 def load_all_staff():
 
@@ -48,20 +50,20 @@ def load_all_staff():
 
 	# io.StringIO() allows pandas.read_csv() to read the string input as though
 	# it were a filestream
-	return pd.read_csv(io.StringIO(input_string))
+	return pd.read_csv(io.StringIO(input_string)) 
 
-def coach_analysis(df):
+def coaching_analysis(df):
 	
-	df['mental_sum'] = df['Mot'] + df['Det'] + df['Dis']
-	df['area_max'] = df[['Att','Def','Men']].max(axis=1)
-	df['style_max'] = df[['Tec','TCo']].max(axis=1)
+	df['mental_sum'] = + df['Det'] + df['Dis'] + df['Mot']
 
-	df['simple_sum'] = df['mental_sum'] + df['area_max'] + df['style_max']
+	for coaching_area in ['Att', 'Def', 'Men']:
+		for coaching_style in ['Tec', 'TCo']:
+			df[coaching_area + '-' + coaching_style] = df['mental_sum'] + df[coaching_area] + df[coaching_style]
 
-	df['mental_mean'] = df['mental_sum'] / 3
-	df['coaching_mean'] = (df['area_max'] + df['style_max']) / 2
+	df['max_coaching_aptitude'] = df[COACHING_APTITUDES].max(axis=1)
+	df['total_coaching_aptitude'] = sum(df[_] for _ in COACHING_APTITUDES)
 
-	df = df.sort_values(by='coaching_mean', ascending=False)
+	df = df.sort_values(by='max_coaching_aptitude', ascending=False)
 	
 	return df
 
@@ -73,15 +75,16 @@ def overall_analysis(df):
 
 	return df
 
+def print_top_candidates(df, no_candidates, metrics):
+	# Overrides the default table break for pandas
+	pd.set_option('display.max_columns', None)
+
+	print(df[['Name'] + metrics].head(no_candidates))
+
 if __name__ == '__main__':
 
-	all_staff_df = load_all_staff()
-	# all_staff_df = coach_analysis(all_staff_df)
+	df = load_all_staff()
+	df = coaching_analysis(df)
+	# df = overall_analysis(df)
 
-	all_staff_df = overall_analysis(all_staff_df)
-
-	print(all_staff_df[ATTRIBUTES + ['sum_all_attributes', 'Name']])
-
-
-
-
+	print_top_candidates(df, 10, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude'])
