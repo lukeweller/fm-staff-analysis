@@ -19,5 +19,9 @@
 		sort coaches by their max coaching aptitude
 	-gk, --coaching
 		sort coaches by their total goalkeeper coaching aptitude
+	-f, --fitness-coaching
+		sort coaches by their fitness coaching aptitude
+	-yd, --head-youth-dev
+		sort coaches by their aptitude as a head of youth development
 	-h, --help
 		print this message

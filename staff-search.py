@@ -14,6 +14,9 @@ NO_CANIDATES = 10
 
 ATTRIBUTES = ['Ada', 'Att', 'Def', 'Det', 'Fit', 'GkD', 'GkH', 'GkS', 'Judge A', 'Jud PD', 'Judge P', 'Jud SA', 'Jud TD', 'Dis', 'Man', 'Men', 'Mot', 'Negotiating', 'Phy', 'Prs D', 'SpS', 'TCo', 'Tac Knw', 'Tec', 'Youth']
 COACHING_ATTRIBUTES = ['Att', 'Def', 'Men', 'Tec', 'TCo', 'Det', 'Dis', 'Mot']
+GK_COACHING_ATTRIBUTES = ['GkD', 'GkH', 'GkS', 'Det', 'Dis', 'Mot']
+FITNESS_COACHING_ATTRIBUTES = ['Fit', 'Det', 'Dis', 'Mot']
+HEAD_YOUTH_DEV_ATTRIBUTES = ['Judge A', 'Judge P', 'Youth']
 COACHING_APTITUDES = ['Att-Tec', 'Att-TCo', 'Def-Tec', 'Def-TCo', 'Men-Tec', 'Men-TCo']
 
 def load_all_staff(input_filename):
@@ -55,9 +58,17 @@ def load_all_staff(input_filename):
 	# it were a filestream
 	return pd.read_csv(io.StringIO(input_string)) 
 
+def overall_analysis(df):
+
+	df['sum_all_attributes'] = sum(df[attribute] for attribute in ATTRIBUTES)
+
+	df = df.sort_values(by='sum_all_attributes', ascending=False)
+
+	return df
+
 def coaching_analysis(df):
 	
-	df['mental_sum'] = + df['Det'] + df['Dis'] + df['Mot']
+	df['mental_sum'] = df['Det'] + df['Dis'] + df['Mot']
 
 	for coaching_area in ['Att', 'Def', 'Men']:
 		for coaching_style in ['Tec', 'TCo']:
@@ -72,17 +83,26 @@ def coaching_analysis(df):
 
 def goalkeeper_coaching_analysis(df):
 
-	# TODO
-
+	df['gk_coaching_aptitude'] = sum(df[_] for _ in GK_COACHING_ATTRIBUTES)
+	
+	df = df.sort_values(by='gk_coaching_aptitude', ascending=False)
+	
 	return df
 
+def fitness_coaching_analysis(df):
 
-def overall_analysis(df):
+	df['fitness_coaching_aptitude'] = sum(df[_] for _ in FITNESS_COACHING_ATTRIBUTES)
+	
+	df = df.sort_values(by='fitness_coaching_aptitude', ascending=False)
+	
+	return df
 
-	df['sum_all_attributes'] = sum(df[attribute] for attribute in ATTRIBUTES)
+def head_youth_dev_analysis(df):
 
-	df = df.sort_values(by='sum_all_attributes', ascending=False)
-
+	df['head_yth_dev_aptitude'] = sum(df[_] for _ in HEAD_YOUTH_DEV_ATTRIBUTES)
+	
+	df = df.sort_values(by='head_yth_dev_aptitude', ascending=False)
+	
 	return df
 
 def print_top_candidates(df, no_candidates, metrics):
@@ -107,6 +127,10 @@ def print_help_msg():
 		  '		sort coaches by their max coaching aptitude\n'
 		  '	-gk, --coaching\n'
 		  '		sort coaches by their total goalkeeper coaching aptitude\n'
+		  '	-f, --fitness-coaching\n'
+		  '		sort coaches by their fitness coaching aptitude\n'
+		  '	-yd, --head-youth-dev\n'
+		  '		sort coaches by their aptitude as a head of youth development\n'
 		  '	-h, --help\n'
 		  '		print this message')
 
@@ -140,6 +164,13 @@ if __name__ == '__main__':
 			print_top_candidates(df, no_candidates, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude'])
 		elif arg == '-gk' or arg == '--goalkeeper-coaching':
 			df = goalkeeper_coaching_analysis(df)
+			print_top_candidates(df, no_candidates, GK_COACHING_ATTRIBUTES + ['gk_coaching_aptitude'])
+		elif arg == '-f' or arg == '--fitness-coaching':
+			df = fitness_coaching_analysis(df)
+			print_top_candidates(df, no_candidates, FITNESS_COACHING_ATTRIBUTES + ['fitness_coaching_aptitude'])
+		elif arg == '-yd' or arg == '--head-youth-dev':
+			df = head_youth_dev_analysis(df)
+			print_top_candidates(df, no_candidates, HEAD_YOUTH_DEV_ATTRIBUTES + ['Preferred Formation', 'Tactical Style', 'Personality', 'head_yth_dev_aptitude'])
 		else:
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
 			exit(1)
