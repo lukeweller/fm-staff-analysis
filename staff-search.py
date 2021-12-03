@@ -7,19 +7,22 @@ import pandas as pd
 INPUT_FILENAME = './input/All.rtf'
 
 # Use view './views/All.fmf' in order to create input file
-VIEW_FILENAME = './views/All.fmf'
+# VIEW_FILENAME = './views/All.fmf'
+
+# Sets default # of top canidates to print
+NO_CANIDATES = 10
 
 ATTRIBUTES = ['Ada', 'Att', 'Def', 'Det', 'Fit', 'GkD', 'GkH', 'GkS', 'Judge A', 'Jud PD', 'Judge P', 'Jud SA', 'Jud TD', 'Dis', 'Man', 'Men', 'Mot', 'Negotiating', 'Phy', 'Prs D', 'SpS', 'TCo', 'Tac Knw', 'Tec', 'Youth']
 COACHING_ATTRIBUTES = ['Att', 'Def', 'Men', 'Tec', 'TCo', 'Det', 'Dis', 'Mot']
 COACHING_APTITUDES = ['Att-Tec', 'Att-TCo', 'Def-Tec', 'Def-TCo', 'Men-Tec', 'Men-TCo']
 
-def load_all_staff():
+def load_all_staff(input_filename):
 
 	try:
-		with open(INPUT_FILENAME) as input_file:
+		with open(input_filename, 'r') as input_file:
 			raw_input = input_file.read()
 	except:
-		print('Error: failed to open input file: \'./input/All.rtf\'')
+		print('Error: failed to open input file: {}'.format(input_filename))
 		sys.exit(1)
 
 	input_string = ''
@@ -67,6 +70,13 @@ def coaching_analysis(df):
 	
 	return df
 
+def goalkeeper_coaching_analysis(df):
+
+	# TODO
+
+	return df
+
+
 def overall_analysis(df):
 
 	df['sum_all_attributes'] = sum(df[attribute] for attribute in ATTRIBUTES)
@@ -79,12 +89,57 @@ def print_top_candidates(df, no_candidates, metrics):
 	# Overrides the default table break for pandas
 	pd.set_option('display.max_columns', None)
 
-	print(df[['Name'] + metrics].head(no_candidates))
+	print(df[metrics + ['Name']].head(no_candidates))
+
+def print_help_msg():
+	print('Usage:\n'
+		  '	1. Import custom view file (`./views/All.fmf`) into the \'Staff Search\' page while in FM\n'
+		  '	2. Copy all view data (ctrl-A, ctrl-P) and save data as a text file to `./input/All.rtf`\n'
+		  '	3. Use `./staff-search.py` to analyze coaches and print top canidates\n'
+		  'Options:\n'
+		  '	-i, --input\n'
+		  '		specify the name of the input file; e.g., ./staff-search.py -i [filename]\n'
+		  '	-n, --number\n'
+		  '		specify number of top canidates to print; e.g., ./staff-search.py -n [number]\n'
+		  '	-o, --overall\n'
+		  '		sort coaches by sum of all attributes\n'
+		  '	-c. --coaching\n'
+		  '		sort coaches by their max coaching aptitude\n'
+		  '	-gk, --coaching\n'
+		  '		sort coaches by their total goalkeeper coaching aptitude\n'
+		  '	-h, --help\n'
+		  '		print this message')
 
 if __name__ == '__main__':
 
-	df = load_all_staff()
-	df = coaching_analysis(df)
-	# df = overall_analysis(df)
+	args = sys.argv[1:]
 
-	print_top_candidates(df, 10, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude'])
+	input_filename = INPUT_FILENAME
+	no_candidates = NO_CANIDATES
+
+	# Loads default input file if no input argument is given
+	if '-i' not in args and '--input' not in args:
+		df = load_all_staff(input_filename)
+
+	# Iterate through args
+	while len(args) > 0:
+		arg = args.pop(0)
+		if arg == '-h' or arg == '--help':
+			print_help_msg()
+			exit(0)
+		if arg == '-i' or arg == '--input':
+			input_filename = args.pop(0)
+			df = load_all_staff(input_filename)
+		elif arg == '-n' or arg == '--number':
+			no_candidates = int(args.pop(0))
+		elif arg == '-o' or arg == '--overall':
+			df = overall_analysis(df)
+			print_top_candidates(df, no_candidates, ATTRIBUTES + ['sum_all_attributes'])
+		elif arg == '-c' or arg == '--coaching':
+			df = coaching_analysis(df)
+			print_top_candidates(df, no_candidates, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude'])
+		elif arg == '-gk' or arg == '--goalkeeper-coaching':
+			df = goalkeeper_coaching_analysis(df)
+		else:
+			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
+			exit(1)
