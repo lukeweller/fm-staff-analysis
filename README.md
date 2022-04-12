@@ -14,7 +14,7 @@
 	-n, --number
 		specify number of top canidates to print; e.g., ./staff-search.py -n [number]
 	-o. --overall
-		sort coaches by sum of all attributes
+		sort coaches by sum of all attributes; enabled by default if no analysis type (e.g. coaching) is selected
 	-c. --coaching
 		sort coaches by their max coaching aptitude
 	-tc. --total-coaching
