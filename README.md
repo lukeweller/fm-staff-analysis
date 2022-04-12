@@ -2,8 +2,8 @@
 
 ### Usage
 
-1. Import custom view file (`./views/All.fmf`) into the 'Staff Search' page while in FM
-2. Copy all view data (ctrl-A, ctrl-P) and save data as a text file to `./input/All.rtf`
+1. Import custom view file (e.g., `./views/Coach Search.fmf`) into the 'Staff Search' page while in FM
+2. Copy all view data (ctrl-A, ctrl-P) and save data as a text file (e.g., `./input/rtf/coaching_candidates.rtf`
 3. Use `./staff-search.py` to analyze coaches and print top canidates
 
 
@@ -17,7 +17,9 @@
 		sort coaches by sum of all attributes
 	-c. --coaching
 		sort coaches by their max coaching aptitude
-	-gk, --coaching
+	-tc. --total-coaching
+		sort coaches by their total coaching aptitude
+	-gk, --goalkeeper-coaching
 		sort coaches by their total goalkeeper coaching aptitude
 	-f, --fitness-coaching
 		sort coaches by their fitness coaching aptitude

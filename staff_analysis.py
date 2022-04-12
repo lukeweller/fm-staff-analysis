@@ -104,7 +104,7 @@ def overall_analysis(df):
 
 	return df
 
-def coaching_analysis(df):
+def coaching_analysis(df, sort_by='max_coaching_aptitude'):
 	
 	df['mental_sum'] = df['Det'] + df['Dis'] + df['Mot']
 
@@ -115,7 +115,7 @@ def coaching_analysis(df):
 	df['max_coaching_aptitude'] = df[COACHING_APTITUDES].max(axis=1)
 	df['total_coaching_aptitude'] = sum(df[_] for _ in COACHING_APTITUDES)
 
-	df = df.sort_values(by='max_coaching_aptitude', ascending=False)
+	df = df.sort_values(by=sort_by, ascending=False)
 	
 	return df
 
@@ -182,6 +182,7 @@ if __name__ == '__main__':
 	no_candidates = DEFAULT_PRINT_NO
 	caching = False
 	staff_role = ''
+	sort_by = ''
 
 	# Iterate through args
 	while len(args) > 0:
@@ -198,6 +199,9 @@ if __name__ == '__main__':
 			staff_role = 'overall'
 		elif arg == '-c' or arg =='--coaching':
 			staff_role = 'coaching'
+		elif arg == '-tc' or arg =='--total-coaching':
+			staff_role = 'coaching'
+			sort_by = 'total_coaching_aptitude'
 		elif arg == '-gk' or arg == '--goalkeeper':
 			staff_role = 'goalkeeper_coaching'
 		elif arg == '-f' or arg == '--fitness':
@@ -214,7 +218,7 @@ if __name__ == '__main__':
 		df = overall_analysis(df)
 		print_top_candidates(df, no_candidates, ATTRIBUTES + ['sum_all_attributes'])
 	elif staff_role == 'coaching':
-		df = coaching_analysis(df)
+		df = coaching_analysis(df, sort_by)
 		print_top_candidates(df, no_candidates, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude'])
 	elif staff_role == 'goalkeeper_coaching':
 		df = goalkeeper_coaching_analysis(df)
