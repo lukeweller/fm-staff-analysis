@@ -182,7 +182,7 @@ if __name__ == '__main__':
 	no_candidates = DEFAULT_PRINT_NO
 	caching = False
 	staff_role = ''
-	sort_by = ''
+	sort_by = 'max_coaching_aptitude'
 
 	# Iterate through args
 	while len(args) > 0:
