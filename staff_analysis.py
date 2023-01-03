@@ -13,6 +13,8 @@ COACHING_ATTRIBUTES 		= ['Att', 'Def', 'Men', 'Tec', 'TCo', 'Det', 'Dis', 'Mot']
 GK_COACHING_ATTRIBUTES 		= ['GkD', 'GkH', 'GkS', 'Det', 'Dis', 'Mot']
 FITNESS_COACHING_ATTRIBUTES = ['Fit', 'Det', 'Dis', 'Mot']
 HEAD_YOUTH_DEV_ATTRIBUTES 	= ['Judge A', 'Judge P', 'Youth']
+HEAD_COACH_ATTRIBUTES 	    = ['Man', 'Mot', 'Judge A', 'Judge P', 'Tac Knw']
+
 COACHING_APTITUDES 			= ['Att-Tec', 'Att-TCo', 'Def-Tec', 'Def-TCo', 'Men-Tec', 'Men-TCo']
 
 # Helper function for skiprows parameter in pandas.read_csv()
@@ -106,7 +108,8 @@ def overall_analysis(df):
 
 def coaching_analysis(df, sort_by='max_coaching_aptitude'):
 	
-	df['mental_sum'] = df['Det'] + df['Dis'] + df['Mot']
+	# df['mental_sum'] = df['Det'] + df['Dis'] + df['Mot']
+	df['mental_sum'] = round(((df['Det'] + df['Dis'] + df['Mot']) / 2), 2)
 
 	for coaching_area in ['Att', 'Def', 'Men']:
 		for coaching_style in ['Tec', 'TCo']:
@@ -143,8 +146,23 @@ def head_youth_dev_analysis(df):
 	
 	return df
 
+def head_coach_analysis(df):
+
+	df['head_coach_aptitude'] = sum(df[_] for _ in HEAD_COACH_ATTRIBUTES)
+	
+	df = df.sort_values(by='head_coach_aptitude', ascending=False)
+	
+	return df
+
 def print_top_candidates(df, no_candidates, metrics):
-	# Overrides the default table break for pandas
+	# By default, pandas will truncate columns if the total column width is greater than
+	# the width of the of the display (i.e. the terminal)
+	# Truncated columns look like this:
+	# 	Att-Tec  Att-TCo  ...  total_coaching_aptitude          Name
+	#      60.0     52.0  ...                    334.0   Toni Varela
+	#      55.5     50.5  ...                    322.0    Jason Oost
+	#      58.5     57.5  ...                    334.0     Andy Reid
+	# By setting 'max_columns' = None, we are forcing pandas not to truncate columns
 	pd.set_option('display.max_columns', None)
 
 	print(df[metrics + ['Name']].head(no_candidates))
@@ -212,6 +230,8 @@ if __name__ == '__main__':
 			staff_role = 'fitness_coaching'
 		elif arg == '-yd' or arg == '--youth-dev':
 			staff_role = 'head_youth_dev'
+		elif arg == '-hc' or arg == '--head-coach':
+			staff_role = 'head_coach'
 		else:
 			print('error: failed to recognize argument \'{}\' while parsing command-line arguments'.format(arg))
 			print_help_msg(1)
@@ -233,3 +253,6 @@ if __name__ == '__main__':
 	elif staff_role == 'head_youth_dev':
 		df = head_youth_dev_analysis(df)
 		print_top_candidates(df, no_candidates, HEAD_YOUTH_DEV_ATTRIBUTES + ['Preferred Formation', 'Tactical Style', 'Personality', 'head_yth_dev_aptitude'])
+	elif staff_role == 'head_coach':
+		df = head_coach_analysis(df)
+		print_top_candidates(df, no_candidates, HEAD_COACH_ATTRIBUTES + ['Preferred Formation', 'Tactical Style', 'head_coach_aptitude'])
