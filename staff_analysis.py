@@ -70,10 +70,10 @@ def preprocessing(df):
 	return df
 
 def coaching_analysis(df, sort_by):
+	# From https://www.passion4fm.com/football-manager-coaching-staff-star-rating/:
 	# The formula for determining coach aptitude (as seen in Training -> Coaches) is:
 	# 6 * [Attack, Defense, Mental] + 3 * [Technical, Tactical] + 2 * [Determination + Discipline + Motivation]
 	# The max possible aptitude is 300.  Aptitudes > 270 = 5 stars, aptitudes > 240 < 270 = 4.5 stars, etc.
-	
 	for coaching_area in ['Att', 'Def', 'Men']:
 		for coaching_style in ['Tec', 'TCo']:
 			df[coaching_area + '-' + coaching_style] = 2 * sum(df[_] for _ in MENTAL_COACHING_ATTRIBUTES) + 6 * df[coaching_area] + 3 * df[coaching_style]
