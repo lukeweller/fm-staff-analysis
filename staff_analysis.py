@@ -74,6 +74,8 @@ def preprocessing(df):
 	# Most exports (*.rtf) do NOT include these rows, but some do
 	df = df.dropna(axis = 0, how = 'all')
 
+	# By default, at least in this case, pd.read_csv() reads in all numeric values as floats
+	# .astype('int64') converts all float values to ints
 	for col in df.columns:
 		if col in ALL_ATTRIBUTES:
 			df[col] = pd.to_numeric(df[col]).astype('int64')
