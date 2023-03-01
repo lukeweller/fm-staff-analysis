@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os, sys, time
 import pandas as pd
+import build_webpage
 
 # Save a default filename for the input
 DEFAULT_INPUT_FILENAME = './input/coaching_candidates.rtf'
@@ -9,14 +10,21 @@ DEFAULT_INPUT_FILENAME = './input/coaching_candidates.rtf'
 DEFAULT_PRINT_NO = 10
 
 MENTAL_COACHING_ATTRIBUTES  = ['Det', 'Dis', 'Mot']
-COACHING_ATTRIBUTES 		= ['Att', 'Def', 'Men', 'Tec', 'TCo'] + MENTAL_COACHING_ATTRIBUTES
-GK_COACHING_ATTRIBUTES 		= ['GkD', 'GkH', 'GkS'] + MENTAL_COACHING_ATTRIBUTES
-FITNESS_COACHING_ATTRIBUTES = ['Fit'] + MENTAL_COACHING_ATTRIBUTES
+COACHING_AREA_ATTRIBUTES    = ['Att', 'Def', 'Men']
+COACHING_STYLE_ATTRIBUTES   = ['Tec', 'TCo']
+GK_COACHING_ATTRIBUTES 		= ['GkD', 'GkH', 'GkS']
+FITNESS_COACHING_ATTRIBUTES = ['Fit']
 HEAD_YOUTH_DEV_ATTRIBUTES 	= ['Judge A', 'Judge P', 'Youth']
 HEAD_COACH_ATTRIBUTES 	    = ['Man', 'Mot', 'Judge A', 'Judge P', 'Tac Knw']
 
 # Duplicate-free list of all possible attributes (columns) for use in preprocessing()
-ALL_ATTRIBUTES = list(set(COACHING_ATTRIBUTES + GK_COACHING_ATTRIBUTES + FITNESS_COACHING_ATTRIBUTES + HEAD_YOUTH_DEV_ATTRIBUTES + HEAD_COACH_ATTRIBUTES))
+ALL_ATTRIBUTES = list(set(MENTAL_COACHING_ATTRIBUTES +		
+						  COACHING_AREA_ATTRIBUTES + 
+						  COACHING_STYLE_ATTRIBUTES +
+						  GK_COACHING_ATTRIBUTES +
+						  FITNESS_COACHING_ATTRIBUTES +
+						  HEAD_YOUTH_DEV_ATTRIBUTES +
+						  HEAD_COACH_ATTRIBUTES))
 
 COACHING_APTITUDES = ['Att-Tec', 'Att-TCo', 'Def-Tec', 'Def-TCo', 'Men-Tec', 'Men-TCo']
 
@@ -61,9 +69,14 @@ def preprocessing(df):
 	# Removes whitespace from body (all values)
 	df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
+	# Drops rows where every feature is NaN
+	# It's unclear how/why these rows are being exported (afaik, their aren't any NaN coaches in game)
+	# Most exports (*.rtf) do NOT include these rows, but some do
+	df = df.dropna(axis = 0, how = 'all')
+
 	for col in df.columns:
 		if col in ALL_ATTRIBUTES:
-			df[col] = pd.to_numeric(df[col])
+			df[col] = pd.to_numeric(df[col]).astype('int64')
 
 	print('total preprocessing time: {:.3f}s'.format(time.time() - preprocessing_start_time))
 
@@ -94,8 +107,11 @@ def goalkeeper_coaching_analysis(df):
 	return df
 
 def fitness_coaching_analysis(df):
-
-	df['fitness_coaching_aptitude'] = sum(df[_] for _ in FITNESS_COACHING_ATTRIBUTES)
+	# From https://www.passion4fm.com/football-manager-coaching-staff-star-rating/:
+	# The formula for determining fitness coach aptitude (as seen in Training -> Coaches) is:
+	# 9 * Fitness + 2 * [Determination + Discipline + Motivation]
+	# The max possible aptitude is 300.  Aptitudes > 270 = 5 stars, aptitudes > 240 < 270 = 4.5 stars, etc.
+	df['fitness_coaching_aptitude'] = 9 * sum(df[_] for _ in FITNESS_COACHING_ATTRIBUTES) + 2 * sum(df[_] for _ in MENTAL_COACHING_ATTRIBUTES)
 	
 	df = df.sort_values(by='fitness_coaching_aptitude', ascending=False)
 	
@@ -141,7 +157,7 @@ def print_help_msg(exit_status):
 		  '	-n, --number\n'
 		  '		specify number of top candidates to print; e.g., ./staff-search.py -n [number]\n'
 		  ' -s, --sort-by\n'
-		  '		specify an attribute to sort '
+		  '		specify an attribute to sort by'
 		  '	-c, --coaching\n'
 		  '		sort coaches by their max coaching aptitude; enabled by default if no analysis type is selected\n'
 		  ' -tc, --total-coaching\n'
@@ -213,7 +229,7 @@ if __name__ == '__main__':
 		df = head_coach_analysis(df)
 		print_top_candidates(df, no_candidates, HEAD_COACH_ATTRIBUTES + ['Preferred Formation', 'Tactical Style', 'head_coach_aptitude'])
 
-
 	# Web Output Testing
-	result = df.head(no_candidates).to_html()
-	# print(result)
+	table = build_webpage.build_table(df)
+	# result = df.head(no_candidates).to_html()
+	# print(table)
