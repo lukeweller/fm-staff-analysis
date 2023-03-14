@@ -95,6 +95,7 @@ def coaching_analysis(df, sort_by):
 
 	df['max_coaching_aptitude'] = df[COACHING_APTITUDES].max(axis=1)
 	df['total_coaching_aptitude'] = sum(df[_] for _ in COACHING_APTITUDES)
+	df['total_coaching_aptitude_percentile'] = round(df['total_coaching_aptitude'] / max(df['total_coaching_aptitude']) * 100, 2)
 
 	df = df.sort_values(by=sort_by, ascending=False)
 	
@@ -217,7 +218,7 @@ if __name__ == '__main__':
 
 	if staff_role == 'coaching' or staff_role == '':
 		df = coaching_analysis(df, sort_by)
-		print_top_candidates(df, no_candidates, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude'])
+		print_top_candidates(df, no_candidates, COACHING_APTITUDES + ['max_coaching_aptitude', 'total_coaching_aptitude_percentile'])
 	elif staff_role == 'goalkeeper_coaching':
 		df = goalkeeper_coaching_analysis(df)
 		print_top_candidates(df, no_candidates, GK_COACHING_ATTRIBUTES + ['gk_coaching_aptitude'])
